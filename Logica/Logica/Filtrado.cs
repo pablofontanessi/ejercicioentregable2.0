@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Logica
 {
-    class Filtrado
+    public class Filtrado
     {
         public int Antiguedad { get; set; }
         public string Nombre { get; set; }
