@@ -6,104 +6,51 @@ using System.Threading.Tasks;
 
 namespace Logica
 {
-    public class Principal
+    class Principal
     {
-        List<Empleados> ListaEmpleados = new List<Empleados>();
-
-        public double ObtenerSueldoNeto(int pDNIempleado)
+        List<Cliente> ListaClientes = new List<Cliente>();
+        List<Prestamo> ListaPrestamos = new List<Prestamo>();
+        public bool RegistrarPrestamo(int pCuitCliente, DateTime pFechaDePrestamo, double pMontoTotal, decimal pTasaInt, int pCantCuotas    )
         {
-            double SueldoNeto = 0;
-            foreach (var empleado in ListaEmpleados)
+            Cliente ClienteSolicitante = new Cliente();
+            foreach (var cliente in ListaClientes)
             {
-                if (empleado.ObtenerDNIEmpleado() == pDNIempleado)
+                if (cliente.Cuit == pCuitCliente)
                 {
-                    switch (empleado.ObtenerSeccion())
-                    {
-                        case "A":
-                            SueldoNeto = empleado.ObtenerSueldoBruto() * 0.8;
-                            break;
-                        case "P":
-                            SueldoNeto = empleado.ObtenerSueldoBruto() - (empleado.ObtenerSueldoBruto() * 0.02) * empleado.ObtenerAntiguedad();
-                            break;
-                        case "V":
-                            if (empleado.ObtenerAntiguedad() <= 5)
-                            {
-                                SueldoNeto = empleado.ObtenerSueldoBruto();
-                            }
-                            else
-                            {
-                                SueldoNeto = empleado.ObtenerSueldoBruto() - (empleado.ObtenerSueldoBruto() * 0.03) * empleado.ObtenerAntiguedad();
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-            return SueldoNeto;
-        }
-
-        public bool CarganNuevoEmpleado(int pDni, string pNombre, double pSueldoBruto, DateTime pFechaNac, DateTime pFechaIngreso, string pSeccion)
-        {
-            bool Exitoso = false;
-            foreach (var Empleado in ListaEmpleados)
-            {
-                if (pDni == Empleado.ObtenerDNIEmpleado())
-                {
-                    return Exitoso;
+                    ClienteSolicitante = cliente;
                 }
                 else
                 {
-                    Empleados EmpleadoNuevo = new Empleados();
-                    EmpleadoNuevo.CargarDNIEmpleado(pDni);
-                    EmpleadoNuevo.CargarNombreEmpleado(pNombre);
-                    EmpleadoNuevo.CargarSeccion(pSeccion);
-                    EmpleadoNuevo.CargarSueldoBruto(pSueldoBruto);
-                    EmpleadoNuevo.CargarFechaNacimiento(pFechaNac);
-                    EmpleadoNuevo.CargarFechaIngreso(pFechaIngreso);
-                    ListaEmpleados.Add(EmpleadoNuevo);
-                    return Exitoso = true;
+                    return false;
                 }
             }
-
-
-            return Exitoso;
-
-        }
-
-        public double DesvincularEmpleado(int pDNI)
-        {
-            double Indenmizacion = 0;
-            foreach (var empleado in ListaEmpleados)
+            if (ClienteSolicitante != null & pFechaDePrestamo <= DateTime.Today & ClienteSolicitante.CalcularMontoMaximoPrestamo() <= pMontoTotal)
             {
-                if (empleado.ObtenerDNIEmpleado() == pDNI)
-                {
-
-                    Indenmizacion = 2 * empleado.ObtenerSueldoBruto() * empleado.ObtenerAntiguedad();
-                    ListaEmpleados.Remove(empleado);
-                    return Indenmizacion;
-                }
+                Prestamo RegistroPrestamo = new Prestamo();
+                ListaPrestamos = RegistroPrestamo.RegistrarUnPrestamo(ListaPrestamos, ClienteSolicitante,pFechaDePrestamo, pMontoTotal,pTasaInt, pCantCuotas );
+                return true;
             }
-            return Indenmizacion;
-        }
-        public List<Filtrado> ObtenerListadoPorSeccion(string pSeccion)
-        {
-            List<Filtrado> ListadoPorSeccion = new List<Filtrado>();
-            foreach (var empleado in ListaEmpleados)
+            else
             {
-                if (empleado.ObtenerSeccion() == pSeccion)
+                return false;
+            }
+        }
+        public List<PrestamoFiltrado> ObtenerListaPrestamosEn2Fechas(DateTime pFechaMenor, DateTime pFechaMayor)
+        {
+            List<PrestamoFiltrado> ListaPrestamoFiltrado = new List<PrestamoFiltrado>();
+            PrestamoFiltrado PrestamoFiltrado = new PrestamoFiltrado();
+            foreach (var prestamo in ListaPrestamos)
+            {
+                if (prestamo.FechaPrestamo >= pFechaMenor | prestamo.FechaPrestamo <= pFechaMayor )
                 {
-                    Filtrado EmpleadoConCat = new Filtrado();
-                    EmpleadoConCat.Antiguedad = empleado.ObtenerAntiguedad();
-                    EmpleadoConCat.Antiguedad = empleado.ObtenerEdad();
-                    EmpleadoConCat.Nombre = empleado.ObtenerNombreEmpleado();
-                    EmpleadoConCat.Seccion = empleado.ObtenerSeccion();
-                    ListadoPorSeccion.Add(EmpleadoConCat);
-
+                    PrestamoFiltrado.FechaPrestamo = prestamo.FechaPrestamo;
+                    PrestamoFiltrado.Monto = prestamo.MontoTotalCredito;
+                    PrestamoFiltrado.TasaInteres = prestamo.TasaInteresOtorgada;
+                    PrestamoFiltrado.NombreCli = prestamo.ClienteOtorgado.Nombre +" " + prestamo.ClienteOtorgado.Apellido;
+                    ListaPrestamoFiltrado.Add(PrestamoFiltrado);
                 }
             }
-            ListadoPorSeccion.OrderByDescending(Filtrado.Antiguedad); //No pude encontrar como ordenar por este metodo
-            return ListadoPorSeccion;
+            return ListaPrestamoFiltrado;
         }
     }
 }
